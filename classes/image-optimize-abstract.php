@@ -10,11 +10,11 @@ abstract class ImageOptimizeAbstractHandler {
   public $mime_type;
   public $handler_slug;
 
-  public function __construct($handler_slug = NULL, $mime_type = NULL) {
+  public function __construct($handler_slug = NULL, $mime_type = NULL, $binary_path = NULL) {
     if(!empty($handler_slug) && !empty($mime_type)) {
       $this->handler_slug = $handler_slug;
       $this->mime_type = $mime_type;
-      $this->binary_path = get_option('image_optimize_binary_' . $this->handler_slug);
+      $this->binary_path = $binary_path;
     }
   }
 
@@ -44,11 +44,34 @@ abstract class ImageOptimizeAbstractHandler {
     $sizes[] = 'full';
     $retval = array();
     foreach($sizes as $size) {
-      $img_src = wp_get_attachment_image_src($id, $size);
-      $real_path = ABSPATH . ltrim(str_replace(get_bloginfo('url'), '', $img_src[0]), '/');
-      $retval[] = $real_path;
+      $retval[] = self::get_image_path($id, $size);
     }
     return $retval;
+  }
+
+  /**
+   * Gets the MIME Type for this image.
+   * @param $id
+   * @return bool
+   */
+  public static function get_image_mime_type($id) {
+    if($info = getimagesize(self::get_image_path($id))) {
+      return $info['mime'];
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Gets the real path for this image.
+   * @param $id
+   * @param string $size
+   * @return string
+   */
+  public static function get_image_path($id, $size = 'full') {
+    $img_src = wp_get_attachment_image_src($id, $size);
+    return ABSPATH . ltrim(str_replace(get_bloginfo('url'), '', $img_src[0]), '/');
   }
 
   /**
