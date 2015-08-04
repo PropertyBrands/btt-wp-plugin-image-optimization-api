@@ -7,7 +7,7 @@ class ImageOptimizePngHandler extends ImageOptimizeAbstractHandler {
   public $handler_slug = 'image_optimize_png';
 
   public function __construct() {
-    parent::__construct($this->handler_slug, $this->mime_type);
+    parent::__construct($this->handler_slug, $this->mime_type, get_option($this->handler_slug . '_binary'));
   }
 
   public function attachment_optimize($id) {
@@ -15,11 +15,12 @@ class ImageOptimizePngHandler extends ImageOptimizeAbstractHandler {
     $cmd = "cd " . escapeshellarg(ABSPATH) . "; ";
     if($images) {
       foreach($images as $img) {
-        $cmd .= $this->binary_path . " " . escapeshellarg($img);
+        $cmd .= $this->binary_path . " " . escapeshellarg($img) . "; ";
       }
+      $cmd .= ' 2>&1';
     }
     if(!empty($cmd)) {
-      shell_exec($cmd);
+      $output = shell_exec($cmd);
       //@todo: something with the output...
     }
   }
