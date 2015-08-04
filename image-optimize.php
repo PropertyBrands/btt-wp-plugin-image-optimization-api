@@ -21,26 +21,39 @@ class ImageOptimize {
    */
   public static $handlers = array();
 
-  /**
-   * First require the base abstract class.
-   */
+
   public function __construct() {
+    /**
+     * First require the base abstract class and attach handlers.
+     */
     include(sprintf('%s/classes/image-optimize-abstract.php', dirname(__FILE__)));
     add_action('init', array($this, 'register_optimization_handlers'), 0);
+    /**
+     * Includes settings as needed.
+     */
     if (is_admin()) {
       include(sprintf('%s/admin/settings.php', dirname(__FILE__)));
       if (class_exists('ImageOptimizeSettings')) {
         $this->settings_instance = new ImageOptimizeSettings();
       }
     }
+    /**
+     * These are 2 included handlers. Use them as a guide to implementa your own.
+     */
     add_filter('image_optimize_register_handlers', array(
       $this,
       'register_jpg'
     ));
+
     add_filter('image_optimize_register_handlers', array(
       $this,
       'register_png'
     ));
+
+    /**
+     * Main hook implementation for optimizing attachments.
+     */
+    add_action('add_attachment', array($this, 'optimize'));
   }
 
   /**
@@ -103,6 +116,17 @@ class ImageOptimize {
     return $handlers;
   }
 
+  /**
+   * Attempts to determine the proper handler
+   * @param $id
+   */
+  public static function optimize($id) {
+    foreach(self::$handlers as $handler) {
+      if($handler->mime_type === $handler::get_image_mime_type($id)) {
+        $handler->attachment_optimize($id);
+      }
+    }
+  }
 }
 
 $ImageOptimize = new ImageOptimize();
